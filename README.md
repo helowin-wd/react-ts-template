@@ -7,7 +7,7 @@
 
 [Ant Design of React官网](https://ant-design.antgroup.com/components/overview-cn/)
 
-## 一、创建项目
+## 1.创建项目
 
 ```text
 npx create-react-app "你的项目的名称" --template typescript
@@ -24,7 +24,7 @@ npx create-react-app "你的项目的名称" --template typescript
   "react-redux": "^8.1.2",
 ```
 
-## 二、样式初始化
+## 2.样式初始化
 
 `reset-css`比`Normalize.css`更直接，干净利落去除默认样式，更适合在企业里的场景。
 
@@ -56,7 +56,7 @@ npx create-react-app "你的项目的名称" --template typescript
   );
 ```
 
-## 四、scss的安装和使用
+## 3.scss的安装和使用
 
 安装sass
 
@@ -107,7 +107,7 @@ root.render(
 );
 ```
 
-### scss文件的全局引入会影响其他组件
+### 3.1scss文件的全局引入会影响其他组件
 
 举例说明
 
@@ -148,7 +148,7 @@ export default Comp2;
 在其他页面引入这两个组件，你会发现 虽然Comp2组件没有引入样式文件，但 `comp1.scss`样式同样在Comp2组件也生效了, 究其原因是
 `import './comp1.scss'` 这种引入方式属于全局引入，同类名组件的样式会受影响。
 
-### 解决方案：scss的模块化管理样式
+### 3.2解决方案：scss的模块化管理样式
 
 模块化声明文件 `src/index.d.ts`
 
@@ -196,23 +196,7 @@ export default Comp1;
 
 ```
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-## 五、路径别名的配置
+## 4.路径别名的配置
 
 目前ts对@指向src目录的提示是不支持的，vite默认也是不支持的。
 需要手动配置@符号的指向
@@ -221,7 +205,7 @@ export default Comp1;
 
 [解决 npm run eject 报错问题](https://blog.csdn.net/YanG_2859390447/article/details/120044977)
 
-### 配置路径别名的提示
+### 4.1配置路径别名的提示
 
 虽然现在路径别名有了，但是在文件输入`@/`是没有提示路径的
 需要我们在`tsconfig.json`中：添加两项配置
