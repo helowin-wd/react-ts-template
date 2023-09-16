@@ -111,3 +111,26 @@ root.render(
 
 目前ts对@指向src目录的提示是不支持的，vite默认也是不支持的。
 需要手动配置@符号的指向
+
+[react如何设置文件路径别名](https://www.fengnayun.com/news/content/331378.html)
+
+[解决 npm run eject 报错问题](https://blog.csdn.net/YanG_2859390447/article/details/120044977)
+
+### 配置路径别名的提示
+
+虽然现在路径别名有了，但是在文件输入`@/`是没有提示路径的
+需要我们在`tsconfig.json`中：添加两项配置
+
+```text
+"compilerOptions": {
+  ...,
+  "baseUrl": "./",
+    "paths": {
+      "@/*":[
+        "src/*"
+      ]
+    }
+}
+```
+
+配置好之后输入`@/`就有路径资源提示了
