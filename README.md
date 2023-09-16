@@ -223,3 +223,87 @@ export default Comp1;
 ```
 
 配置好之后输入`@/`就有路径资源提示了
+
+## 5.Antd Design
+
+安装 [Antd Design](https://ant-design.antgroup.com/docs/react/introduce-cn)
+
+```text
+// 使用 npm 安装
+npm install antd --save
+
+// 使用 yarn 安装
+yarn add antd
+```
+
+安装图标所需要的模块
+
+```text
+// 使用 npm 安装
+npm install --save @ant-design/icons
+
+// 使用 yarn 安装
+yarn add @ant-design/icons
+```
+
+App组件中引入即可使用：
+
+```tsx
+import React from 'react';
+
+// 引入UI组件
+import { Button, Space } from 'antd';
+// 引入组件图标
+import { StepForwardOutlined } from '@ant-design/icons'
+
+// 若没有样式生效，需要手动引入样式文件 (全部组件的样式都引入了)
+// import 'antd/dist/antd.css'; // or 'antd/dist/antd.less'
+
+const App: React.FC = () => (
+  <Space wrap>
+    <Button type="primary">Primary Button</Button>
+    <StepForwardOutlined style={{fontSize: '40px', color: 'pink'}}/>
+  </Space>
+);
+
+export default App;
+
+```
+
+### 5.1 配置Antd Design 样式自动按需引入
+
+antd的4.x版本以上已经支持组件按需引入，我们只需要解决样式上的自动按需引入即可。
+安装插件 `vite-plugin-style-import`
+
+```text
+npm install vite-plugin-style-import@1.4.1 -D
+```
+
+在vite.config.ts中进行配置：
+
+```ts
+import styleImport, {AntdResolve} from 'vite-plugin-style-import';
+
+export default defineConfig {
+  plugins: [
+    react(),
+    styleImport({
+      resolves: [
+        AntdResolve()
+      ]
+    })
+  ],
+  ...
+}
+```
+
+接着去掉App.vue中的 `import 'antd/dist/antd.css'; // or 'antd/dist/antd.less'`
+这一行代码.
+
+启动项目，发现报错，缺少less，进行安装 （Antd默认`xx.less`文件）
+
+```text
+npm i less@2.7.2 -D
+```
+
+[antd样式的按需引入](http://www.hzhcontrols.com/new-1352207.html)

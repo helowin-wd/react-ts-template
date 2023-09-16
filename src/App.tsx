@@ -1,15 +1,15 @@
 import React from 'react';
-import Comp1 from '@/components/Comp1';
-import Comp2 from '@/components/Comp2';
 
-function App() {
-  return (
-    <div className="App">
-     顶级组件
-     <Comp1 />
-     <Comp2 />
-    </div>
-  );
-}
+// 引入UI组件
+import { Button, Space } from 'antd';
+// 引入组件图标
+import { StepForwardOutlined } from '@ant-design/icons'
+
+const App: React.FC = () => (
+  <Space wrap>
+    <Button type="primary">Primary Button</Button>
+    <StepForwardOutlined style={{fontSize: '40px', color: 'pink'}}/>
+  </Space>
+);
 
 export default App;
