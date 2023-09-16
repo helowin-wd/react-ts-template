@@ -1,3 +1,5 @@
+// 组件形式的写法【旧项目的写法】
+
 import App from '../App'
 import Home from '../views/Home'
 import About from '../views/About'

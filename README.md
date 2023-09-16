@@ -428,3 +428,120 @@ export default App
 ```
 
 浏览器访问 `http://localhost:3000/home` 或者 `http://localhost:3000/about`, 即可看到相应页面的内容
+
+## 7.React路由第二种方案（形如vue）
+
+功能包括：路由懒加载、loading组件抽取
+
+1.在`src/router/index.tsx`中，代码如下：
+
+```tsx
+import React, { lazy } from 'react'
+// Navigate重定向组件
+import { Navigate } from 'react-router-dom'
+
+/**
+ * @路由懒加载
+ *  1.懒加载模式的组件的写法：外面需要套一层loading的提示加载组件
+ *  2.抽离loading组件
+ */
+const Home = lazy(() => import('@/views/Home'))
+const About = lazy(() => import('@/views/About'))
+
+// loading组件
+const withLoadingComponent = (comp: JSX.Element) => <React.Suspense fallback={<div>Loading...</div>}>{comp}</React.Suspense>
+
+const routes = [
+  {
+    path: '/',
+    element: <Navigate to="/home" />
+  },
+  {
+    path: '/home',
+    element: withLoadingComponent(<Home />)
+  },
+  {
+    path: '/about',
+    element: withLoadingComponent(<About />)
+  }
+]
+
+export default routes
+
+```
+
+2.在入口文件`src/index.tsx`中，代码如下：
+
+```tsx
+import React from 'react'
+import ReactDOM from 'react-dom/client'
+// 路由模式🔥
+import { BrowserRouter } from 'react-router-dom'
+
+// 引入App组件🔥
+import App from './App'
+
+// 样式初始化一般放在组件的最前面
+import 'reset-css'
+
+// UI框架的样式
+
+// 全局样式
+import '@/assets/styles/global.scss'
+
+const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement)
+root.render(
+  <React.StrictMode>
+    <BrowserRouter>
+      <App />
+    </BrowserRouter>
+  </React.StrictMode>
+)
+
+```
+
+3.在`src/App.tsx`中，代码如下：
+
+```tsx
+import React from 'react'
+// 路由跳转、useRoutes钩子🔥
+import { Link, useRoutes } from 'react-router-dom'
+
+// 引入UI组件
+import { Button } from 'antd'
+// 引入组件图标
+import { StepForwardOutlined } from '@ant-design/icons'
+
+// 引入路由🔥
+import router from './router'
+
+const App: React.FC = () => {
+  // ReactHooks 生成的路由对象🔥
+  const outlet = useRoutes(router)
+
+  return (
+    <div>
+      <div>
+        <h1>App组件内容</h1>
+        <div>
+          <Button type="primary" size="small">
+            Primary Button
+          </Button>
+          <StepForwardOutlined style={{ fontSize: '20px', color: 'pink' }} />
+        </div>
+
+        <div>
+          <Link to="/home">点击Home</Link>
+          <Link to="/about">点击About</Link>
+        </div>
+      </div>
+
+      {/* 占位符组件，类似于窗口，用来展示组件的，类似vue中的router-view */}
+      {outlet}
+    </div>
+  )
+}
+
+export default App
+
+```
