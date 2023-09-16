@@ -107,6 +107,111 @@ root.render(
 );
 ```
 
+### scss文件的全局引入会影响其他组件
+
+举例说明
+
+`src/components/Comp1`
+
+```js
+
+import './comp1.scss' // 这种引入的方式属于全局引入，同类名组件的样式会受影响
+
+const Comp1 = () => {
+  return (
+    <div className="box">
+      <p>comp1的内容</p>
+    </div>
+  )
+}
+
+export default Comp1;
+
+```
+
+`src/components/Comp1`
+
+```js
+
+const Comp2 = () => {
+  return (
+    <div className="box">
+      <p>comp2的内容</p>
+    </div>
+  )
+}
+
+export default Comp2;
+
+```
+
+在其他页面引入这两个组件，你会发现 虽然Comp2组件没有引入样式文件，但 `comp1.scss`样式同样在Comp2组件也生效了, 究其原因是
+`import './comp1.scss'` 这种引入方式属于全局引入，同类名组件的样式会受影响。
+
+### 解决方案：scss的模块化管理样式
+
+模块化声明文件 `src/index.d.ts`
+
+```ts
+declare module "*.jpg"
+declare module "*.module.scss"
+
+declare module'*.scss' {
+  const content: {[key: string]: any}
+  export = content
+}
+```
+
+接着在 `tsconfig.json`引入该文件 (与include同级)
+
+```json
+{
+  "compilerOptions": {
+    ...
+  },
+  "files": [
+    "./src/index.d.ts"
+  ],
+  "include": [
+    "src"
+  ]
+}
+```
+
+模块化引入样式文件 `import styles from 'xxx.module.scss'`，以对象的方式使用
+
+```text
+// 模块化引入
+import styles from './comp1.module.scss' 
+
+const Comp1 = () => {
+  return (
+    <div className={styles.box}>
+      <p>comp1的内容</p>
+    </div>
+  )
+}
+
+export default Comp1;
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ## 五、路径别名的配置
 
 目前ts对@指向src目录的提示是不支持的，vite默认也是不支持的。

@@ -26,6 +26,9 @@
       ]
     }
   },
+  "files": [
+    "./src/index.d.ts"
+  ],
   "include": [
     "src"
   ]
