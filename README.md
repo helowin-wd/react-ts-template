@@ -55,3 +55,54 @@ npx create-react-app "你的项目的名称" --template typescript
     </React.StrictMode>
   );
 ```
+
+## 四、scss的安装和使用
+
+安装sass
+
+```text
+npm i node-sass sass-loader --save-dev
+```
+
+全局样式文件 `global.scss`
+
+```scss
+$bgColor: #eee;
+
+body {
+  background-color: $bgColor;
+  user-select: none; // 禁用文字选中
+}
+
+img {
+  // 禁止拖动图片
+  -webkit-user-drag: none;
+}
+```
+
+在 `index.tsx` 中引入全局样式
+
+```text
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+// 样式初始化一般放在组件的最前面
+import "reset-css"
+
+// UI框架的样式
+
+// 全局样式🔥
+import "./assets/styles/global.scss"
+
+// 组件的样式
+import App from './App';
+
+
+const root = ReactDOM.createRoot(
+  document.getElementById('root') as HTMLElement
+);
+root.render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);
+```

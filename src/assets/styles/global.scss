@@ -1,0 +1,11 @@
+$bgColor: #eee;
+
+body {
+  background-color: $bgColor;
+  user-select: none; // 禁用文字选中
+}
+
+img {
+  // 禁止拖动图片
+  -webkit-user-drag: none;
+}
