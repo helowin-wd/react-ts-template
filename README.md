@@ -307,3 +307,124 @@ npm i less@2.7.2 -D
 ```
 
 [antd样式的按需引入](http://www.hzhcontrols.com/new-1352207.html)
+
+## 6.React路由：第一种配置方案（旧项目中的写法）
+
+### 6.1初步展示
+
+模拟vue中的home和about两个组件
+
+1.在 src下创建views文件夹
+
+在该文件夹下创建 `Home.tsx` 和 `About.tsx`, 代码大致如下：
+
+```ts
+const Home = () => {
+  return (
+    <div>Home</div>
+  )
+}
+
+export default Home;
+```
+
+2.配置对应关系（包含路由重定向）
+在 src 下新建router文件夹，新建router/index.tsx
+
+```tsx
+import App from '../App'
+import Home from '../views/Home'
+import About from '../views/About'
+// 路由重定向
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+// 两种路由模式的组件：BrowserRouter（History模式）HashRouter（Hash模式）
+
+// 是否需要写return 取决于内容是否有逻辑，没有逻辑不需要return
+
+// const baseRouter = () => {
+//   return ()
+// }
+
+// 以上写法可以简写为：
+const baseRouter = () => (
+  <BrowserRouter>
+    <Routes>
+      <Route path="/" element={<App />}>
+        {/* 路由重定向: 用户访问/的时候，重定向到/home路径 */}
+        <Route path='/' element={<Navigate to="/home"/>}></Route>
+        <Route path="/home" element={<Home />}></Route>
+        <Route path="/about" element={<About />}></Route>
+      </Route>
+    </Routes>
+  </BrowserRouter>
+)
+
+export default baseRouter
+
+```
+
+3.替换顶级组件：在/src/index.tsx中把顶级组件App替换为这个路由对象
+
+```tsx
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+
+// 引入路由🔥
+import Router from './router';
+
+// 样式初始化一般放在组件的最前面
+import "reset-css"
+
+// UI框架的样式
+
+// 全局样式
+import "@/assets/styles/global.scss"
+
+const root = ReactDOM.createRoot(
+  document.getElementById('root') as HTMLElement
+);
+root.render(
+  <React.StrictMode>
+    <Router />
+  </React.StrictMode>
+);
+
+```
+
+4.在App.tsx中引入Outlet路由占位符
+
+```tsx
+import React from 'react'
+// 路由占位符、路由跳转 🔥
+import { Outlet, Link } from 'react-router-dom'
+
+// 引入UI组件
+import { Button } from 'antd'
+// 引入组件图标
+import { StepForwardOutlined } from '@ant-design/icons'
+
+const App: React.FC = () => (
+  <div>
+    <div>
+      <h1>App组件内容</h1>
+      <div>
+        <Button type="primary" size='small'>Primary Button</Button>
+        <StepForwardOutlined style={{ fontSize: '20px', color: 'pink' }} />
+      </div>
+
+      <div>
+        <Link to="/home">点击Home</Link>
+        <Link to="/about">点击About</Link>
+      </div>
+    </div>
+
+    {/* 占位符组件，类似于窗口，用来展示组件的，类似vue中的router-view */}
+    <Outlet></Outlet>
+  </div>
+)
+
+export default App
+
+```
+
+浏览器访问 `http://localhost:3000/home` 或者 `http://localhost:3000/about`, 即可看到相应页面的内容
