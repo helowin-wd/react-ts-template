@@ -10,7 +10,7 @@
 ## 一、创建项目
 
 ```text
-px create-react-app "你的项目的名称" --template typescript
+npx create-react-app "你的项目的名称" --template typescript
 
 ```
 
@@ -22,4 +22,36 @@ px create-react-app "你的项目的名称" --template typescript
   "react-router-dom": "^6.16.0",
   "redux": "^4.2.1",
   "react-redux": "^8.1.2",
+```
+
+## 二、样式初始化
+
+`reset-css`比`Normalize.css`更直接，干净利落去除默认样式，更适合在企业里的场景。
+
+```text
+  npm i reset-css
+```
+
+在 `src/index.tsx`中引入reset-css
+
+```js
+  import React from 'react';
+  import ReactDOM from 'react-dom/client';
+  // 样式初始化一般放在组件的最前面
+  import "reset-css"
+
+  // UI框架的样式
+
+  // 组件的样式
+  import App from './App';
+
+
+  const root = ReactDOM.createRoot(
+    document.getElementById('root') as HTMLElement
+  );
+  root.render(
+    <React.StrictMode>
+      <App />
+    </React.StrictMode>
+  );
 ```
