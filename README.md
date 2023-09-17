@@ -793,3 +793,311 @@ const routes = [
 export default routes
 
 ```
+
+## 9.登录页面
+
+功能点
+
+* canvas绘制星空背景
+* placeholder 字体颜色控制
+* [react如何正确引入less](https://wudong.blog.csdn.net/article/details/132949029)，覆盖UI组件默认样式
+  
+* 创建登录组件
+* ts如何处理事件对象e
+* [ts踩坑记录：其目标缺少构造签名的 “new“ 表达式隐式具有 “any“ 类型](https://wudong.blog.csdn.net/article/details/132948151)
+
+1.在 `login/init.ts` 中
+
+canvas绘制星空背景 🔥
+
+```ts
+// 链接：https://juejin.cn/post/7250658226412060731
+
+export default function initLoginBg() {
+  var windowWidth = document.documentElement.clientWidth || document.body.clientWidth;
+  var windowHeight = document.documentElement.clientHeight || document.body.clientHeight;
+  var canvas = document.getElementById('canvas') as HTMLCanvasElement,
+    ctx = canvas.getContext('2d') as CanvasRenderingContext2D,
+    w = canvas.width = windowWidth,
+    h = canvas.height = windowHeight,
+
+    hue = 217,
+    stars: IntStart[] = [],
+    count = 0,
+    maxStarts = 500; // 星星数量
+
+  var canvas2 = document.createElement('canvas'),
+    ctx2 = canvas2.getContext('2d') as CanvasRenderingContext2D;
+  canvas2.width = 100;
+  canvas2.height = 100;
+  var half = canvas2.width / 2,
+    gradient2 = ctx2.createRadialGradient(half, half, 0, half, half, half);
+  gradient2.addColorStop(0.025, '#ccc');
+  gradient2.addColorStop(0.1, 'hsl(' + hue + ', 61%, 33%)');
+  gradient2.addColorStop(0.25, 'hsl(' + hue + ', 64%, 6%)');
+  gradient2.addColorStop(1, 'transparent');
+
+  ctx2.fillStyle = gradient2;
+  ctx2.beginPath();
+  ctx2.arc(half, half, half, 0, Math.PI * 2);
+  ctx2.fill();
+
+  // End cache
+
+  function random(min: number, max = 0) {
+    if (arguments.length < 2) {
+      max = min;
+      min = 0;
+    }
+
+    if (min > max) {
+      var hold = max;
+      max = min;
+      min = hold;
+    }
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
+  function maxOrbit(x: number, y: number) {
+    var max = Math.max(x, y),
+      diameter = Math.round(Math.sqrt(max * max + max * max));
+    return diameter / 2; // 星星移动范围，值越大范围越小
+  }
+
+  interface IntStart {
+    orbitRadius: number;
+    radius: number;
+    orbitX: number;
+    orbitY: number;
+    timePassed: number;
+    speed: number;
+    alpha: number;
+    draw: () => void;
+  }
+  var Star = function (this: IntStart) {
+    this.orbitRadius = random(maxOrbit(w, h));
+    this.radius = random(60, this.orbitRadius) / 18;
+    // 星星大小
+    this.orbitX = w / 2;
+    this.orbitY = h / 2;
+    this.timePassed = random(0, maxStarts);
+    this.speed = random(this.orbitRadius) / 500000;
+    // 星星移动速度
+    this.alpha = random(2, 10) / 10;
+    count++;
+    stars[count] = this;
+  }
+
+  Star.prototype.draw = function () {
+    var x = Math.sin(this.timePassed) * this.orbitRadius + this.orbitX,
+      y = Math.cos(this.timePassed) * this.orbitRadius + this.orbitY,
+      twinkle = random(10);
+
+    if (twinkle === 1 && this.alpha > 0) {
+      this.alpha -= 0.05;
+    } else if (twinkle === 2 && this.alpha < 1) {
+      this.alpha += 0.05
+    }
+
+    ctx.globalAlpha = this.alpha;
+    ctx.drawImage(
+      canvas2,
+      x - this.radius / 2,
+      y - this.radius / 2,
+      this.radius,
+      this.radius
+    );
+    this.timePassed += this.speed;
+  }
+
+  for (let i = 0; i < maxStarts; i++) {
+    new (Star as any)(); // 🔥
+  }
+
+  function animation() {
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.globalAlpha = 0.8; // 尾巴
+    ctx.fillStyle = 'hsla(' + hue + ', 64%, 6%, 1)';
+    ctx.fillRect(0, 0, w, h);
+
+    // ctx.drawImage(img, 0, 0);
+    ctx.globalCompositeOperation = 'lighter';
+    for (let i = 1, l = stars.length; i < l; i++) {
+      stars[i].draw();
+    }
+
+    window.requestAnimationFrame(animation);
+  }
+
+  animation();
+}
+
+```
+
+2.在 `login/login.less` 中
+
+```less
+// 覆盖组件的默认样式 🔥
+.login-wrapper {
+  .ant-input, .ant-input-password {
+    background-color: rgba(255, 255, 255, 0);
+    border-color: #1890ff;
+    color: #fff;
+    height: 38px;
+  }
+
+  // placeholder字体颜色控制 🔥
+  .ant-input::-webkit-input-placeholder {
+    color: rgba(24, 144, 255, .5);
+  }
+
+  // 输入密码对齐显示
+  .ant-input-password .ant-input {
+    height: 28px;
+  }
+
+  // 眼睛图标
+  .ant-input-password-icon.anticon, 
+  .ant-input-password-icon.anticon:hover {
+    color: #1890ff;
+  }
+  .captchaBox {
+    display: flex;
+    .captchaImg {
+      width: 38px;
+      margin-left: 20px;
+      cursor: pointer;
+      background: blue;
+    }
+  }
+  .loginBtn {
+    height: 38px;
+  }
+}
+```
+
+3.在 `login/login.module.scss` 中
+
+```scss
+.loginPage {
+  position: relative;
+  .loginBox {
+    width: 450px;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    color: #fff;
+
+    h1 {
+      font-weight: bold;
+      font-size: 22px;
+      text-align: center;
+      color: #fff;
+    }
+    p {
+      text-align: center;
+      margin: 20px 0;
+    }
+    .title {
+      margin-bottom: 40px;
+      position: relative;
+      &::before,
+      &::after {
+        content: '';
+        width: 100px;
+        height: 2px;
+        position: absolute;
+        background: linear-gradient(to right, rgba(255, 255, 255, 0), #1976D2);
+        left: -110px;
+        top: 12px;
+      }
+      &::after {
+        left: auto;
+        background: linear-gradient(to left, rgba(255, 255, 255, 0), #1976D2);
+        right: -110px;
+      }
+    }
+  }
+}
+
+```
+
+4.在登录页面`login/index.tsx`中
+
+```tsx
+import { ChangeEvent, useEffect, useState } from 'react'
+import { Input, Space, Button } from 'antd'
+import styles from './login.module.scss'
+import initLoginBg from './init'
+import './login.less'
+
+const Login = () => {
+  // 加载完这个组件之后执行: 背景初始化
+  useEffect(() => {
+    initLoginBg()
+    window.onresize = function () {
+      initLoginBg()
+    }
+  }, [])
+
+  // 用户输入的信息
+  const [usernameVal, setUsernameVal] = useState('') // 用户名
+  const [passwordVal, setPasswordVal] = useState('') // 密码
+  const [captchaVal, setCaptchaVal] = useState('') // 验证码
+
+  // ts如何对事件对象e 定义类型 🔥
+  const usernameChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setUsernameVal(e.target.value)
+  }
+
+  const passwordChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setPasswordVal(e.target.value)
+  }
+
+  const captchaChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setCaptchaVal(e.target.value)
+  }
+
+  // 点击登录
+  const toLogin = () => {
+    console.log('用户输入的信息', {
+      usernameVal,
+      passwordVal,
+      captchaVal
+    })
+  }
+
+  return (
+    <div className={styles.loginPage}>
+      {/* 存放背景 */}
+      <canvas id="canvas" style={{ display: 'block' }}></canvas>
+
+      <div className={styles.loginBox + ' login-wrapper'}>
+        <div className={styles.title}>
+          <h1>React+TypeScript+Redux通用后台管理系统</h1>
+          <p>Strive Everyday</p>
+        </div>
+        <div className={styles.formContent}>
+          <Space direction="vertical" size="middle" style={{ display: 'flex' }}>
+            <Input placeholder="用户名" onChange={usernameChange} />
+            <Input.Password placeholder="密码" onChange={passwordChange} />
+            <div className="captchaBox">
+              <Input placeholder="验证码" onChange={captchaChange} />
+              <div className="captchaImg">
+                <img height="38" src="" alt="" />
+              </div>
+            </div>
+            <Button className="loginBtn" type="primary" block onClick={toLogin}>
+              登录
+            </Button>
+          </Space>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default Login
+
+```

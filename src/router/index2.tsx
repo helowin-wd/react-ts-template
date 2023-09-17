@@ -3,6 +3,7 @@
 import React, { lazy } from 'react'
 // Navigate重定向组件
 import { Navigate } from 'react-router-dom'
+import Login from '@/views/Login'
 
 /**
  * @路由懒加载
@@ -54,6 +55,10 @@ const routes = [
         element: withLoadingComponent(<Page4Two />)
       }
     ]
+  },
+  {
+    path: '/login',
+    element: <Login />
   },
   // 访问其他路径，重定向首页
   {
