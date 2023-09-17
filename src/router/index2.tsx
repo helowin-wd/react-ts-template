@@ -10,7 +10,12 @@ import { Navigate } from 'react-router-dom'
  *  2.抽离loading组件
  */
 const Home = lazy(() => import('@/views/Home'))
-const About = lazy(() => import('@/views/About'))
+const Page1 = lazy(() => import('@/views/Page1'))
+const Page2 = lazy(() => import('@/views/Page2'))
+const Page3One = lazy(() => import('@/views/Page3/Page3-1'))
+const Page3Two = lazy(() => import('@/views/Page3/Page3-2'))
+const Page4One = lazy(() => import('@/views/Page4/Page4-1'))
+const Page4Two = lazy(() => import('@/views/Page4/Page4-2'))
 
 // loading组件
 const withLoadingComponent = (comp: JSX.Element) => <React.Suspense fallback={<div>Loading...</div>}>{comp}</React.Suspense>
@@ -18,15 +23,42 @@ const withLoadingComponent = (comp: JSX.Element) => <React.Suspense fallback={<d
 const routes = [
   {
     path: '/',
-    element: <Navigate to="/home" />
+    element: <Navigate to="/page1" />
   },
   {
-    path: '/home',
-    element: withLoadingComponent(<Home />)
+    path: '/',
+    element: <Home />,
+    children: [
+      {
+        path: '/page1',
+        element: withLoadingComponent(<Page1 />)
+      },
+      {
+        path: '/page2',
+        element: withLoadingComponent(<Page2 />)
+      },
+      {
+        path: '/page3/page3-1',
+        element: withLoadingComponent(<Page3One />)
+      },
+      {
+        path: '/page3/page3-2',
+        element: withLoadingComponent(<Page3Two />)
+      },
+      {
+        path: '/page4/page4-1',
+        element: withLoadingComponent(<Page4One />)
+      },
+      {
+        path: '/page4/page4-2',
+        element: withLoadingComponent(<Page4Two />)
+      }
+    ]
   },
+  // 访问其他路径，重定向首页
   {
-    path: '/about',
-    element: withLoadingComponent(<About />)
+    path: '*',
+    element: <Navigate to="/page1" />
   }
 ]
 

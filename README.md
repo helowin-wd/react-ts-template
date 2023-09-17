@@ -545,3 +545,251 @@ const App: React.FC = () => {
 export default App
 
 ```
+
+## 8.侧边栏配置
+
+功能点如下
+
+* 嵌套路由
+* 菜单组件抽取 `MainMenu`
+  * 设置菜单手风琴效果：只能有一个展开项
+  * 编程式导航 useNavigate
+  * 点击侧边栏获取路径
+  * 刷新页面：当前项选中并且展开
+    * 样式处理
+    * 配置初始展开项
+    * 类型约束处理：[ts如何书写obj['key']不报错的解决方法🔥](https://blog.csdn.net/weixin_44666644/article/details/132942137?csdn_share_tail=%7B%22type%22%3A%22blog%22%2C%22rType%22%3A%22article%22%2C%22rId%22%3A%22132942137%22%2C%22source%22%3A%22weixin_44666644%22%7D)
+
+1.在`src/components/MainMenu/index.tsx`中，抽取菜单组件
+
+```tsx
+import React, { useState } from 'react'
+import { DesktopOutlined, PieChartOutlined, UserOutlined } from '@ant-design/icons'
+import type { MenuProps } from 'antd'
+import { Menu } from 'antd'
+import { useNavigate, useLocation } from 'react-router-dom'
+
+type MenuItem = Required<MenuProps>['items'][number]
+
+// 登录请求到数据之后，就可以跟items这个数组进行匹配
+const items: MenuItem[] = [
+  {
+    label: 'Page1',
+    key: '/page1',
+    icon: <PieChartOutlined />
+  },
+  {
+    label: 'Page2',
+    key: '/page2',
+    icon: <DesktopOutlined />
+  },
+  {
+    label: 'Page3',
+    key: 'page3',
+    icon: <UserOutlined />,
+    children: [
+      {
+        label: 'Page3-1',
+        key: '/page3/page3-1'
+      },
+      {
+        label: 'Page3-2',
+        key: '/page3/page3-2'
+      }
+    ]
+  },
+  {
+    label: 'Page4',
+    key: 'page4',
+    icon: <UserOutlined />,
+    children: [
+      {
+        label: 'Page4-1',
+        key: '/page4/page4-1'
+      },
+      {
+        label: 'Page4-2',
+        key: '/page4/page4-2'
+      }
+    ]
+  }
+]
+
+const Comp: React.FC = () => {
+  // 获取当前路由路径
+  const currentRoute = useLocation()
+
+  /**
+   * @刷新页面，激活菜单栏所在的上级菜单展开
+   */
+  let firstOpenKey: string = "";
+  function findKey(obj: {key: string}) {
+    return obj.key === currentRoute.pathname
+  }
+
+  for(let i = 0; i < items.length; i++) {
+    if(items[i]!['children'] && items[i]!['children'].length > 0 && items[i]!['children'].find(findKey)) {
+      firstOpenKey = items[i]!.key as string;
+      break;
+    }
+  }
+
+  // 设置展开项的初始值
+  const [openKeys, setOpenKeys] = useState([firstOpenKey])
+
+  const navigateTo = useNavigate()
+
+  /**
+   * 如果发现加载两次打印，开发环境才会出现，生产环境不会出现。原因如下：
+   * 在入口文件 index.tsx 把严格模式去掉，就不会出现了。至于为什么react要它加载两次
+   * 详情见：https://blog.csdn.net/HYHhmbb/article/details/125973790
+   */
+  console.log(currentRoute.pathname)
+
+  // 左侧菜单栏-点击跳转对应路由
+  const menuClick = (e: { key: string }) => {
+    // 编程式导航
+    navigateTo(e.key)
+  }
+
+  /**
+   * 菜单栏展开/收缩
+   * @param keys 是一个数组，记录了当前哪一项是展开的
+   */
+  const handleOpenChange = (keys: string[]) => {
+    // 设置只能有一个展开项
+    setOpenKeys([keys[keys.length - 1]])
+  }
+
+  return (
+    <Menu theme="dark" defaultSelectedKeys={[currentRoute.pathname]} mode="inline" items={items} onClick={menuClick} onOpenChange={handleOpenChange} openKeys={openKeys} />
+  )
+}
+
+export default Comp
+
+```
+
+2.在首页`Home.tsx`中
+
+```tsx
+import React, { useState } from 'react'
+import { Breadcrumb, Layout, theme } from 'antd'
+import { Outlet } from 'react-router-dom'
+import MainMenu from '@/components/MainMenu'
+
+const { Header, Content, Footer, Sider } = Layout
+
+const Home: React.FC = () => {
+  const [collapsed, setCollapsed] = useState(false)
+  const {
+    token: { colorBgContainer }
+  } = theme.useToken()
+
+  const BreadItems = [
+    {
+      title: 'User'
+    },
+    {
+      title: 'Bill'
+    }
+  ]
+
+  return (
+    <Layout style={{ minHeight: '100vh' }}>
+      <Sider collapsible collapsed={collapsed} onCollapse={value => setCollapsed(value)}>
+        <div className="demo-logo-vertical" />
+        <MainMenu />
+      </Sider>
+      <Layout>
+        <Header style={{ paddingLeft: '16px', background: colorBgContainer }}>
+          <Breadcrumb style={{ lineHeight: '64px' }} separator="/" items={BreadItems} />
+        </Header>
+        <Content style={{ margin: '16px 16px 0' }}>
+          <div style={{ height: '100%', padding: 24, minHeight: 360, background: colorBgContainer }}>
+            {/* 窗口部分 */}
+            <Outlet />
+          </div>
+        </Content>
+        <Footer style={{ textAlign: 'center', padding: 0, lineHeight: '48px' }}>Ant Design ©2023 Created by Ant UED</Footer>
+      </Layout>
+    </Layout>
+  )
+}
+
+export default Home
+
+```
+
+3.在`router/index.tsx`中
+
+功能点：嵌套路由
+
+```tsx
+// React路由写法2 【推荐】
+
+import React, { lazy } from 'react'
+// Navigate重定向组件
+import { Navigate } from 'react-router-dom'
+
+/**
+ * @路由懒加载
+ *  1.懒加载模式的组件的写法：外面需要套一层loading的提示加载组件
+ *  2.抽离loading组件
+ */
+const Home = lazy(() => import('@/views/Home'))
+const Page1 = lazy(() => import('@/views/Page1'))
+const Page2 = lazy(() => import('@/views/Page2'))
+const Page3One = lazy(() => import('@/views/Page3/Page3-1'))
+const Page3Two = lazy(() => import('@/views/Page3/Page3-2'))
+const Page4One = lazy(() => import('@/views/Page4/Page4-1'))
+const Page4Two = lazy(() => import('@/views/Page4/Page4-2'))
+
+// loading组件
+const withLoadingComponent = (comp: JSX.Element) => <React.Suspense fallback={<div>Loading...</div>}>{comp}</React.Suspense>
+
+const routes = [
+  {
+    path: '/',
+    element: <Navigate to="/page1" />
+  },
+  {
+    path: '/',
+    element: <Home />,
+    children: [
+      {
+        path: '/page1',
+        element: withLoadingComponent(<Page1 />)
+      },
+      {
+        path: '/page2',
+        element: withLoadingComponent(<Page2 />)
+      },
+      {
+        path: '/page3/page3-1',
+        element: withLoadingComponent(<Page3One />)
+      },
+      {
+        path: '/page3/page3-2',
+        element: withLoadingComponent(<Page3Two />)
+      },
+      {
+        path: '/page4/page4-1',
+        element: withLoadingComponent(<Page4One />)
+      },
+      {
+        path: '/page4/page4-2',
+        element: withLoadingComponent(<Page4Two />)
+      }
+    ]
+  },
+  // 访问其他路径，重定向首页
+  {
+    path: '*',
+    element: <Navigate to="/page1" />
+  }
+]
+
+export default routes
+
+```
