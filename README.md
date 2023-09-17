@@ -1101,3 +1101,31 @@ const Login = () => {
 export default Login
 
 ```
+
+## 10.react-redux 🚀🚀🚀
+
+功能点
+
+* 获取/修改store仓库数据
+* 两个TS警告解决方案 🔥
+* 数据和方法从reducer中进行抽离
+* 模块化reducer
+  * 模块化reducer并组合起来
+  * 【亮点🌟】优化switch...case语句，采用for循环♻️
+  * 【亮点🌟】方法名对象actionNames的自动生成
+  * 【亮点🌟】完善各个模块reducer
+
+优化封装的成果：后续新增数据模块，仅需复制 `store/templateStatus` 中的代码，然后在 `store/index.ts`引入，如
+
+```ts
+// 需要新增数据模块，复制模版代码引入即可 🔥
+import handleTemplateReducer from './templateStatus/reducer'
+
+// 组合各个模块的reducer
+const reducers = combineReducers({
+  ...,
+  handleTemplateReducer
+})
+```
+
+详情见: 代码提交记录📝

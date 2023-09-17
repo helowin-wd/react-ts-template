@@ -15,11 +15,17 @@ import 'reset-css'
 // 全局样式
 import '@/assets/styles/global.scss'
 
+// 状态管理
+import { Provider } from 'react-redux'
+import store from './store'
+
 const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement)
 root.render(
-  <React.StrictMode>
-    <BrowserRouter>
-      <App />
-    </BrowserRouter>
-  </React.StrictMode>
+  <Provider store={store}>
+    <React.StrictMode>
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>
+    </React.StrictMode>
+  </Provider>
 )
