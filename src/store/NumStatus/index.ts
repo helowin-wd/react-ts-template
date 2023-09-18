@@ -10,6 +10,7 @@ const store = {
   state: {
     num: 20
   },
+  // 同步方法（形如vue中的Mutations）
   actions: {
     add1(newState: N, action: T) {
       newState.num++
@@ -19,6 +20,14 @@ const store = {
     },
     add3(newState: N, action: T) {
       newState.num += action.val
+    }
+  },
+  // 异步方法：优化redux-thunk的异步写法（模仿vuex的写法）
+  asyncActions: {
+    asyncAdd1(dispatch: Function){
+      setTimeout(() => {
+        dispatch({ type: "add1" })
+      }, 1000)
     }
   },
   // 统一管理 type 状态

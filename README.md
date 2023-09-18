@@ -1129,3 +1129,106 @@ const reducers = combineReducers({
 ```
 
 详情见: 代码提交记录📝
+
+## 11.react-redux的异步解决方案redux-thunk
+
+功能点
+
+* 手动封装redux-thunk的异步函数
+* 解决问题: [参数不能赋给类型“AnyAction”的参数](https://blog.csdn.net/YAYTXT/article/details/128090982)
+
+在`store/NumStatus/index.ts`中做异步操作：
+
+```ts
+add1(newState: {num: number}, action: {type: string}) {
+  // 会有bug 没有办法达到延迟和修改的效果
+  setTimeout(() => {
+    newState.num++
+  }, 1000)
+}
+```
+
+会发现这种写法其实达不到想要的异步效果，需要通过redux相关的异步解决方案来解决（市面上有`redux-saga`,`redux-thunk`）, 我们使用`redux-thunk`
+`redux-thunk`相比于`redux-saga`，体积小，灵活，但需要自己手动抽取和封装。但学习成本低。
+
+项目目录下安装`redux-thunk`
+
+```text
+npm i redux-thunk
+```
+
+1.在`store/index.ts`中
+
+```ts
+import { legacy_createStore, combineReducers, compose, applyMiddleware } from 'redux';
+// 引入redux-thunk 🔥
+import reduxThunk from 'redux-thunk'
+
+import handleNumReducer from './NumStatus/reducer'
+import handleArrReducer from './ArrStatus/reducer'
+
+// 需要新增数据模块，复制模版代码引入即可 🔥
+import handleTemplateReducer from './templateStatus/reducer'
+
+// 组合各个模块的reducer
+const reducers = combineReducers({
+  handleNumReducer,
+  handleArrReducer,
+  handleTemplateReducer
+})
+
+/**
+ * @创建数据仓库
+ * 
+ * window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__() 为了让浏览器正常使用插件：redux-dev-tools
+ */
+// const store = legacy_createStore(reducers, window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__())
+
+
+/**
+ * @redux-thunk 处理异步
+ */
+// 判断有没有 __REDUX_DEVTOOLS_EXTENSION_COMPOSE__ 这个模块
+let composeEnhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__?window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__({}):compose
+
+// 把仓库数据，浏览器redux-dev-tools, 还有reduxThunk插件关联在store中
+const store = legacy_createStore(reducers, composeEnhancers(applyMiddleware(reduxThunk)));
+
+export default store;
+```
+
+2.在 `store/NumStatus/index.ts` 中定义异步方法
+
+```ts
+const store = {
+  ...,
+  // 异步方法：优化redux-thunk的异步写法（模仿vuex的写法）
+  asyncActions: {
+    asyncAdd1(dispatch: Function){
+      setTimeout(() => {
+        dispatch({ type: "add1" })
+      }, 1000)
+    }
+  }
+}
+```
+
+3.在页面中调用异步方法
+
+```tsx
+import numStatus from '@/store/NumStatus'
+
+// 异步 redux-thunk 的用法
+const changeNumASync = () => {
+  // 优化redux-thunk的异步写法
+  // dispatch(调用状态管理中的asyncAdd1)
+  /**
+   * @ts问题记录
+   * dispatch(numStatus.asyncActions.asyncAdd1)
+   * 上述写法报错：类型“(dispatch: Function) => void”的参数不能赋给类型“AnyAction”的参数
+   * 
+   * 解决方案：https://blog.csdn.net/YAYTXT/article/details/128090982
+   */
+  dispatch(numStatus.asyncActions.asyncAdd1 as any)
+}
+```

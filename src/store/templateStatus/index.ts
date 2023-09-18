@@ -3,8 +3,12 @@ const store = {
   state: {
 
   },
-  // 方法
+  // 同步方法
   actions: {
+
+  },
+  // 异步方法
+  asyncActions: {
 
   },
   // 统一管理 type 状态
