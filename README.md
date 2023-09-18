@@ -1232,3 +1232,303 @@ const changeNumASync = () => {
   dispatch(numStatus.asyncActions.asyncAdd1 as any)
 }
 ```
+
+## 12.数据交互的解决方案
+
+功能点
+
+* axios封装和apis的抽取 🔥
+* 数据交互请求
+  * 获取验证码
+  * 规范化请求中的TypeScript的书写 🔥
+  * 请求参数和返回参数类型约束 🔥 
+  * 登录的业务逻辑处理
+* 手写封装前置路由守卫 🔥
+  * 思路分析和业务实现
+
+安装axios
+
+```text
+npm i axios
+```
+
+### axios封装和apis的抽取 🔥
+
+/src下新建request文件夹，并新建index.ts
+
+```ts
+import axios from "axios";
+
+// 创建axios实例
+const instance = axios.create({
+  baseURL: "http://xue.cnkdl.cn:23683",
+  timeout: 3000
+})
+
+// 请求拦截器
+instance.interceptors.request.use(config => {
+  return config
+}, err => {
+  return Promise.reject(err)
+});
+
+// 响应拦截器
+instance.interceptors.response.use(res => {
+  return res.data
+}, err => {
+  return Promise.reject(err)
+});
+
+export default instance;
+```
+
+在 /src/request 下新建api.ts
+
+```ts
+import request from './index';
+
+export const captchaAPI = () => request.get("/prod-api/captchaImage");
+```
+
+### 登录的业务逻辑处理
+
+在`Login.tsx`中
+
+```tsx
+import { ChangeEvent, useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { Input, Space, Button, message } from 'antd'
+import styles from './login.module.scss'
+import initLoginBg from './init'
+import './login.less'
+
+import { CaptchaAPI, LoginAPI } from '@/request/api'
+
+const Login = () => {
+  // 编程式导航
+  const navigate = useNavigate()
+
+  // 加载完这个组件之后执行: 背景初始化
+  useEffect(() => {
+    initLoginBg()
+    window.onresize = function () {
+      initLoginBg()
+    }
+
+    // 获取验证码图片
+    getCaptchaImg()
+  }, [])
+
+  // 点击验证码的请求
+  const getCaptchaImg = async () => {
+    const res = await CaptchaAPI()
+    if (res && res.code === 200) {
+      console.log(res)
+      // 1.图片地址
+      setCaptchaImg('data:image/gif;base64,' + res.img)
+      // 2.本地保存UUID
+      localStorage.setItem('UUID', res.uuid)
+    }
+  }
+
+  // 用户输入的信息
+  const [usernameVal, setUsernameVal] = useState('') // 用户名
+  const [passwordVal, setPasswordVal] = useState('') // 密码
+  const [captchaVal, setCaptchaVal] = useState('') // 验证码
+  // 验证码图片信息
+  const [captchaImg, setCaptchaImg] = useState('')
+
+  const usernameChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setUsernameVal(e.target.value)
+  }
+
+  const passwordChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setPasswordVal(e.target.value)
+  }
+
+  const captchaChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setCaptchaVal(e.target.value)
+  }
+
+  // 点击登录
+  const toLogin = async () => {
+    if (!usernameVal.trim() || !passwordVal.trim() || !captchaVal.trim()) {
+      message.warning('请完整输入信息')
+      return
+    }
+
+    const res = await LoginAPI({
+      username: usernameVal,
+      password: passwordVal,
+      code: captchaVal,
+      uuid: localStorage.getItem('UUID') as string
+    })
+
+    if(res && res.code ===200) {
+      // 1.提示登录成功
+      message.success("登录成功")
+      // 2.保存token
+      localStorage.setItem("REACT_TEMPLATE_TOKEN", res.token)
+      // 3.跳转到/page1
+      navigate("/page1")
+      // 4.删除本地保存的UUID
+      localStorage.removeItem("UUID")
+    }
+  }
+
+  return (
+    <div className={styles.loginPage}>
+      {/* 存放背景 */}
+      <canvas id="canvas" style={{ display: 'block' }}></canvas>
+
+      <div className={styles.loginBox + ' login-wrapper'}>
+        <div className={styles.title}>
+          <h1>React+TypeScript+Redux通用后台管理系统</h1>
+          <p>Strive Everyday</p>
+        </div>
+        <div className={styles.formContent}>
+          <Space direction="vertical" size="middle" style={{ display: 'flex' }}>
+            <Input placeholder="qdtest1" onChange={usernameChange} />
+            <Input.Password placeholder="123456" onChange={passwordChange} />
+            <div className="captchaBox">
+              <Input placeholder="验证码" onChange={captchaChange} />
+              <div className="captchaImg" onClick={getCaptchaImg}>
+                <img height="38" src={captchaImg} alt="" />
+              </div>
+            </div>
+            <Button className="loginBtn" type="primary" block onClick={toLogin}>
+              登录
+            </Button>
+          </Space>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default Login
+
+```
+
+### 规范化请求中的TypeScript的书写 🔥
+
+在 `src/types/api.d.ts`
+
+```ts
+// 这个文件专门定义：请求参数的类型、响应的类型
+
+
+// 验证码的响应类型约束
+interface CaptchaAPIRes {
+  msg: string;
+  img: string;
+  code: number;
+  captchaEnabled: boolean;
+  uuid: string;
+}
+
+// 登录: 请求参数约束
+interface LoginParams {
+  username: string;
+  password: string;
+  code: string;
+  uuid: string;
+}
+// 登录: 响应参数约束
+interface LoginAPIRes {
+  msg: string;
+  code: number;
+  token: string;
+}
+```
+
+### 请求参数和返回参数类型约束 🔥
+
+在 `src/request/api.ts`
+
+```ts
+import request from './index';
+
+// 请求中：请求参数和返回值的类型都需要进行约束
+
+// 验证码请求
+export const CaptchaAPI = ():Promise<CaptchaAPIRes> => request.get("/prod-api/captchaImage");
+
+// 登录请求
+export const LoginAPI = (params: LoginParams):Promise<LoginAPIRes> => request.post("/prod-api/login", params);
+```
+
+### 手写封装前置路由守卫 🔥
+
+在 `src/App.tsx` 中
+
+```tsx
+import React, { useEffect } from 'react'
+// 路由跳转
+import { useRoutes, useLocation, useNavigate } from 'react-router-dom'
+import {message} from 'antd'
+// 引入路由
+import router from './router/index2'
+
+// 去往首页的组件
+const ToPage1 = () => {
+  const navigateTo = useNavigate()
+
+  // 加载完这个组件之后实现跳转
+  useEffect(() => {
+    // 加载完组件之后执行这里的代码
+    navigateTo('/page1')
+    message.warning("您已经登录过了！")
+  }, [navigateTo])
+  return <div></div>
+}
+
+// 去往登录的组件
+const ToLogin = () => {
+  const navigateTo = useNavigate()
+
+  // 加载完这个组件之后实现跳转
+  useEffect(() => {
+    // 加载完组件之后执行这里的代码
+    navigateTo('/login')
+    message.warning("您还没有登录，请登录后再访问！")
+  }, [navigateTo])
+  return <div></div>
+}
+
+// 自定义路由前置守卫
+const BeforeRouterEnter = () => {
+  // ReactHooks方式引入路由对象
+  const outlet = useRoutes(router)
+
+  /**
+   * @后台管理系统两种经典跳转情况
+   * 1.访问登录页面且token存在，跳转首页
+   * 2.访问非登录页且无token，跳转登录页
+   * 3.其余都可以正常放行
+   */
+  let token = localStorage.getItem('REACT_TEMPLATE_TOKEN')
+  const location = useLocation()
+  // 1.访问登录页面且token存在，跳转首页
+  if (location.pathname === '/login' && token) {
+    return <ToPage1 />
+  }
+  // 2.访问非登录页且无token，跳转登录页
+  if (location.pathname !== '/login' && !token) {
+    return <ToLogin />
+  }
+
+  return outlet
+}
+
+const App: React.FC = () => {
+  return (
+    <div>
+      {/* 占位符组件，类似于窗口，用来展示组件的，类似vue中的router-view */}
+      <BeforeRouterEnter />
+    </div>
+  )
+}
+
+export default App
+```
